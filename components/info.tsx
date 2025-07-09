@@ -108,7 +108,7 @@ const Info: React.FC<InfoProps> = ({data}) => {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-      <div className="mt-3 flex items-end justify-between">
+      <div className="mt-3 flex items-end gap-10">
         {/*<Currency value={data?.price}/>*/}
         {parseInt(data?.discountPrice) > 0 ? (
           <p className="text-2xl text-gray-900">
@@ -122,6 +122,7 @@ const Info: React.FC<InfoProps> = ({data}) => {
             <Currency value={data?.price}/>
           </p>
         )}
+        {!data?.isAvailable && (<h2 className="self-center text-red-500">Tidak tersedia</h2>)}
       </div>
       <hr className="my-4"/>
 
@@ -138,7 +139,7 @@ const Info: React.FC<InfoProps> = ({data}) => {
       <p>{data?.description}</p>
       <br/>
 
-      {data?.isAvailable ? (
+      {data?.isAvailable && (
         <div className="mt-10 flex items-center gap-x-3">
           <Button className="flex items-center gap-x-2" onClick={handleBuyNow}>
             Beli Sekarang
@@ -152,8 +153,6 @@ const Info: React.FC<InfoProps> = ({data}) => {
             {isAdding ? "Menambah..." : userId ? "Tambah Keranjang" : "Login untuk Beli"}
           </Button>
         </div>
-      ) : (
-        <h2 className="self-start text-red-500">Tidak tersedia</h2>
       )}
 
       {addedToCart && <p className="mt-3 text-green-600">Produk ditambahkan ke keranjang!</p>}
