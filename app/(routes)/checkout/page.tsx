@@ -74,6 +74,7 @@ const CheckoutPage = () => {
         console.log(paymentProc);
 
         if (paymentProc?.purchase.id) {
+          localStorage.removeItem("cart");
           // window.snap.pay(paymentProc.token,);
           window.open(paymentProc.redirect);
         } else {

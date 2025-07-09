@@ -112,17 +112,20 @@ const Info: React.FC<InfoProps> = ({data}) => {
         {/*<Currency value={data?.price}/>*/}
         {parseInt(data?.discountPrice) > 0 ? (
           <p className="text-2xl text-gray-900">
-            <Currency value={data?.discountPrice}/>
             <s className="text-red-500 opacity-60">
               <Currency value={data?.price}/>
             </s>
+            <Currency value={data?.discountPrice}/>
           </p>
         ) : (
           <p className="text-2xl text-gray-900">
             <Currency value={data?.price}/>
           </p>
         )}
-        {!data?.isAvailable && (<h2 className="self-center text-red-500">Tidak tersedia</h2>)}
+        {data?.isAvailable ?
+          (<h2 className="self-center">Produk tersedia</h2>) :
+          (<h2 className="self-center text-red-500">Tidak tersedia</h2>)
+        }
       </div>
       <hr className="my-4"/>
 
