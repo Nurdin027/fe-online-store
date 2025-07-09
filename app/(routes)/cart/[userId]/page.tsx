@@ -6,7 +6,7 @@ import Image from "next/image";
 import {Cart} from "@/types";
 import {useRouter} from "next/navigation";
 
-const CartPage = ({params}: { params: { userId: string } }) => {
+const CartPage = ({params}: { params: Promise<{ userId: string }> }) => {
   const [carts, setCarts] = useState<Cart[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -17,7 +17,8 @@ const CartPage = ({params}: { params: { userId: string } }) => {
 
   const fetchCart = async () => {
     setLoading(true);
-    const cartData = await getCart(params.userId);
+    const {userId} = await params
+    const cartData = await getCart(userId);
     setCarts(cartData);
     setLoading(false);
   };
