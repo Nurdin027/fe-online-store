@@ -39,6 +39,7 @@ const Info: React.FC<InfoProps> = ({data}) => {
         id: data.id,
         name: data.name,
         price: data.price,
+        discountPrice: data.discountPrice,
         image: data.images[0]?.url,
         quantity: 1,
       },
@@ -61,7 +62,6 @@ const Info: React.FC<InfoProps> = ({data}) => {
 
     try {
       const cartItem = await addToCart(userId, data.id, 1);
-      console.log(cartItem);
 
       if (!cartItem || !cartItem.id) {
         alert("Gagal menambahkan ke keranjang.");
@@ -93,7 +93,6 @@ const Info: React.FC<InfoProps> = ({data}) => {
         });
       }
 
-      console.log(cart);
       localStorage.setItem("cart", JSON.stringify(cart));
 
       setAddedToCart(true);

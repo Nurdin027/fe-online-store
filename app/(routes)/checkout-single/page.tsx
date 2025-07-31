@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
+import {addPayment} from "@/actions/payment";
+import {useUser} from "@clerk/nextjs";
 
 interface CartItem {
   id: number;
   name: string;
   price: number;
+  discountPrice: number;
   image: string;
   quantity: number;
 }
@@ -16,13 +19,16 @@ const CheckoutSingle = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const {user} = useUser();
+  const userId = user?.id;
+  let old = false
 
   // Ambil data dari localStorage saat halaman dimuat
   useEffect(() => {
     const storedSingleCart = JSON.parse(localStorage.getItem("single-cart") || "{}");
 
-    if (storedSingleCart && storedSingleCart.id) {
-      setCart([{ ...storedSingleCart, quantity: 1 }]); // Pastikan dalam array
+    if (storedSingleCart) {
+      setCart([{...storedSingleCart[0], quantity: 1}]); // Pastikan dalam array
     }
   }, []);
 
@@ -36,7 +42,7 @@ const CheckoutSingle = () => {
       return;
     }
 
-    if (!selectedPayment) {
+    if (!selectedPayment && old) {
       alert("Pilih metode pembayaran terlebih dahulu!");
       return;
     }
@@ -46,27 +52,50 @@ const CheckoutSingle = () => {
       return;
     }
 
-    // Format pesan WhatsApp
-    let message = `Halo, saya ingin memesan produk berikut:\n\n`;
-    cart.forEach((item, index) => {
-      message += `${index + 1}. ${item.name} - Rp. ${item.price.toLocaleString()} x ${item.quantity} = Rp. ${(item.price * item.quantity).toLocaleString()}\n`;
-    });
+    function viaWhatsapp() {
+      // Format pesan WhatsApp
+      let message = `Halo, saya ingin memesan produk berikut:\n\n`;
+      cart.forEach((item, index) => {
+        let price = item.discountPrice || item.price
+        message += `${index + 1}. ${item.name} - Rp. ${price.toLocaleString()} x ${item.quantity} = Rp. ${(item.price * item.quantity).toLocaleString()}\n`;
+      });
 
-    const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    message += `\nTotal Harga: Rp. ${totalPrice.toLocaleString()}\n\n`;
-    message += `*Data Pengiriman:*\n`;
-    message += `Nama: ${customerName}\n`;
-    message += `Nomor HP: ${customerPhone}\n`;
-    message += `Alamat: ${customerAddress}\n`;
-    message += `Metode Pembayaran: ${selectedPayment}\n\n`;
-    message += `Mohon konfirmasi pesanan saya. Terima kasih!`;
+      const totalPrice = cart.reduce((acc, item) => acc + (item.discountPrice || item.price) * item.quantity, 0);
+      message += `\nTotal Harga: Rp. ${totalPrice.toLocaleString()}\n\n`;
+      message += `*Data Pengiriman:*\n`;
+      message += `Nama: ${customerName}\n`;
+      message += `Nomor HP: ${customerPhone}\n`;
+      message += `Alamat: ${customerAddress}\n`;
+      message += `Metode Pembayaran: ${selectedPayment}\n\n`;
+      message += `Mohon konfirmasi pesanan saya. Terima kasih!`;
 
-    // Encode pesan untuk URL
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${process.env.NEXT_PUBLIC_PHONE_NUMBER}?text=${encodedMessage}`;
+      // Encode pesan untuk URL
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${process.env.NEXT_PUBLIC_PHONE_NUMBER}?text=${encodedMessage}`;
 
-    // Redirect ke WhatsApp
-    window.open(whatsappUrl, "_blank");
+      // Redirect ke WhatsApp
+      window.open(whatsappUrl, "_blank");
+    }
+
+    async function payment(userId: any, cartId: object[], customerName: string, customerPhone: string, customerAddress: string) {
+      try {
+        const paymentProc = await addPayment(userId, cartId, customerName, customerPhone, customerAddress, true);
+
+        if (paymentProc?.purchase.id) {
+          localStorage.removeItem("cart");
+          // window.snap.pay(paymentProc.token,);
+          window.open(paymentProc.redirect);
+        } else {
+          alert("Proses pembayaran gagal.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan, coba lagi.");
+      }
+    }
+
+    payment(userId, cart, customerName, customerPhone, customerAddress);
   };
 
   return (
@@ -107,11 +136,11 @@ const CheckoutSingle = () => {
         ) : (
           cart.map((item) => (
             <div key={item.id} className="grid grid-cols-5 gap-4 items-center border-b pb-2 mb-2">
-              <img src={item.image} alt={item.name} className="w-16 h-16" />
+              <img src={item.image} alt={item.name} className="w-16 h-16"/>
               <p>{item.name}</p>
-              <p>Rp. {item.price.toLocaleString()}</p>
+              <p>Rp. {(item.discountPrice || item.price).toLocaleString()}</p>
               <p>{item.quantity}</p>
-              <p>Rp. {(item.price * item.quantity).toLocaleString()}</p>
+              <p>Rp. {((item.discountPrice || item.price) * item.quantity).toLocaleString()}</p>
             </div>
           ))
         )}
@@ -121,31 +150,34 @@ const CheckoutSingle = () => {
       <div className="border p-4 mb-4">
         <h2 className="text-lg font-semibold">
           Total Harga: Rp.{" "}
-          {cart.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}
+          {cart.reduce((acc, item) => acc + (item.discountPrice || item.price) * item.quantity, 0).toLocaleString()}
         </h2>
       </div>
 
       {/* Metode Pembayaran */}
-      <div className="border p-4 mb-4">
-        <h2 className="text-lg font-semibold">Metode Pembayaran</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {["Transfer Bank", "E-Wallet", "COD", "Kartu Kredit", "QRIS"].map((method) => (
-            <button
-              key={method}
-              className={`px-4 py-2 border rounded ${
-                selectedPayment === method ? "bg-blue-500 text-white" : ""
-              }`}
-              onClick={() => handlePaymentSelect(method)}
-            >
-              {method}
-            </button>
-          ))}
+      {old && (
+        <div className="border p-4 mb-4">
+          <h2 className="text-lg font-semibold">Metode Pembayaran</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {["Transfer Bank", "E-Wallet", "COD", "Kartu Kredit", "QRIS"].map((method) => (
+              <button
+                key={method}
+                className={`px-4 py-2 border rounded ${
+                  selectedPayment === method ? "bg-blue-500 text-white" : ""
+                }`}
+                onClick={() => handlePaymentSelect(method)}
+              >
+                {method}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tombol Checkout */}
       <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handlePlaceOrder}>
-        Buat Pesanan
+        {/*Buat Pesanan*/}
+        Lanjutkan ke pembayaran
       </button>
     </div>
   );

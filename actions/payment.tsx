@@ -1,11 +1,11 @@
 const URL = `${process.env.NEXT_PUBLIC_API_URL}/payment`
 
-export const addPayment = async (userId: string, cart: object[], customerName: string, customerPhone: string, customerAddress: string) => {
+export const addPayment = async (userId: string, cart: object[], customerName: string, customerPhone: string, customerAddress: string, isSingle: boolean = false) => {
   try {
     const res = await fetch(URL, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({userId, customerName, customerPhone, customerAddress, cart}),
+      body: JSON.stringify({userId, customerName, customerPhone, customerAddress, cart, isSingle}),
     });
     console.log(res)
 
