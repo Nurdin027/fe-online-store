@@ -57,7 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({data}) => {
       </div>
       {/* Harga */}
       <div className="flex items-center justify-between">
-        {parseInt(data?.discountPrice) > 0 ? (
+        {data?.discountPrice > 0 ? (
           <div className="grid">
             <Currency value={data?.discountPrice}/>
             <s className="text-red-500 opacity-60">

@@ -13,8 +13,8 @@ export interface Category {
 export interface Product {
   id: string;
   category: Category;
-  price: string;
-  discountPrice: string;
+  price: number;
+  discountPrice: number;
   description: string;
   name: string;
   isFeatured: boolean;

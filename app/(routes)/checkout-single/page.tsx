@@ -27,6 +27,7 @@ const CheckoutSingle = () => {
   useEffect(() => {
     const storedSingleCart = JSON.parse(localStorage.getItem("single-cart") || "{}");
 
+    console.log(storedSingleCart)
     if (storedSingleCart) {
       setCart([{...storedSingleCart[0], quantity: 1}]); // Pastikan dalam array
     }
@@ -95,7 +96,7 @@ const CheckoutSingle = () => {
       }
     }
 
-    payment(userId, cart, customerName, customerPhone, customerAddress);
+    // payment(userId, cart, customerName, customerPhone, customerAddress);
   };
 
   return (
@@ -134,13 +135,13 @@ const CheckoutSingle = () => {
         {cart.length === 0 ? (
           <p>Produk tidak ditemukan.</p>
         ) : (
-          cart.map((item) => (
+          cart.map((item: CartItem) => (
             <div key={item.id} className="grid grid-cols-5 gap-4 items-center border-b pb-2 mb-2">
               <img src={item.image} alt={item.name} className="w-16 h-16"/>
               <p>{item.name}</p>
-              <p>Rp. {(item.discountPrice || item.price).toLocaleString()}</p>
+              <p>Rp. {(item.discountPrice > 0 ? item.discountPrice : item.price).toLocaleString()}</p>
               <p>{item.quantity}</p>
-              <p>Rp. {((item.discountPrice || item.price) * item.quantity).toLocaleString()}</p>
+              <p>Rp. {((item.discountPrice > 0 ? item.discountPrice : item.price) * item.quantity).toLocaleString()}</p>
             </div>
           ))
         )}
@@ -150,7 +151,7 @@ const CheckoutSingle = () => {
       <div className="border p-4 mb-4">
         <h2 className="text-lg font-semibold">
           Total Harga: Rp.{" "}
-          {cart.reduce((acc, item) => acc + (item.discountPrice || item.price) * item.quantity, 0).toLocaleString()}
+          {cart.reduce((acc, item) => acc + (item.discountPrice > 0 ? item.discountPrice : item.price) * item.quantity, 0).toLocaleString()}
         </h2>
       </div>
 
