@@ -27,7 +27,6 @@ const CheckoutSingle = () => {
   useEffect(() => {
     const storedSingleCart = JSON.parse(localStorage.getItem("single-cart") || "{}");
 
-    console.log(storedSingleCart)
     if (storedSingleCart) {
       setCart([{...storedSingleCart[0], quantity: 1}]); // Pastikan dalam array
     }
@@ -96,7 +95,7 @@ const CheckoutSingle = () => {
       }
     }
 
-    // payment(userId, cart, customerName, customerPhone, customerAddress);
+    payment(userId, cart, customerName, customerPhone, customerAddress);
   };
 
   return (
